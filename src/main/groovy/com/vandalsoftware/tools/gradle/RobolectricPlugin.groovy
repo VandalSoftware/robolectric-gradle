@@ -39,9 +39,9 @@ class RobolectricPlugin implements Plugin<Project> {
         }
 
         def compileConfig = project.configurations.getByName(COMPILE_TASK_NAME)
-        Configuration testConfig = project.configurations.create(TEST_COMPILE_CONFIGURATION_NAME, {
+        Configuration testConfig = project.configurations.create(TEST_COMPILE_CONFIGURATION_NAME) {
             extendsFrom compileConfig
-        })
+        }
 
         project.afterEvaluate {
             def deps = [] as HashSet
@@ -49,15 +49,15 @@ class RobolectricPlugin implements Plugin<Project> {
                 deps.add("$dep.group:$dep.name".toString())
             }
             if (!deps.contains('junit:junit')) {
-                project.dependencies.add(testConfig.name, "junit:junit:$JUNIT_JAR_VERSION", {
+                project.dependencies.add(testConfig.name, "junit:junit:$JUNIT_JAR_VERSION") {
                     exclude module: 'hamcrest-core'
-                })
+                }
             }
             if (!deps.contains('org.robolectric:robolectric')) {
-                project.dependencies.add(testConfig.name, "org.robolectric:robolectric:$ROBOLECTRIC_JAR_VERSION", {
+                project.dependencies.add(testConfig.name, "org.robolectric:robolectric:$ROBOLECTRIC_JAR_VERSION") {
                     exclude module: 'commons-logging'
                     exclude module: 'httpclient'
-                })
+                }
             }
         }
 
