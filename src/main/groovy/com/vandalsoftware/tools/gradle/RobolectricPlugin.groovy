@@ -25,17 +25,37 @@ class RobolectricPlugin implements Plugin<Project> {
             throw new UnsupportedOperationException("This project must apply" +
                     " com.android.application or com.android.library")
         }
+
         def compileConfig = project.configurations.getByName('compile')
         Configuration testConfig = project.configurations.create('testCompile', {
             extendsFrom compileConfig
         })
+
+        project.afterEvaluate {
+            def deps = [] as HashSet
+            testConfig.dependencies.each { dep ->
+                deps.add("$dep.group:$dep.name".toString())
+            }
+            if (!deps.contains('junit:junit')) {
+                project.dependencies.add(testConfig.name, 'junit:junit:4.11', {
+                    exclude module: 'hamcrest-core'
+                })
+            }
+            if (!deps.contains('org.robolectric:robolectric')) {
+                project.dependencies.add(testConfig.name, 'org.robolectric:robolectric:2.3', {
+                    exclude module: 'commons-logging'
+                    exclude module: 'httpclient'
+                })
+            }
+        }
+
         project.android.productFlavors.all {
             project.configurations.create("test${it.name.capitalize()}Compile", {
                 extendsFrom testConfig
             })
         }
 
-        def testAll = project.tasks.create(name: 'testAll', group: 'Verification',
+        def testAll = project.tasks.create(name: 'test', group: 'Verification',
                 description: 'Runs all Robolectric tests')
 
         variants.all { variant ->
