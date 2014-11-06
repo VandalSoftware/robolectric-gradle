@@ -21,7 +21,7 @@ Apply the plugin:
 ```
 buildscript {
     repositories {
-        mavenCentral()
+        jcenter()
     }
     dependencies {
         classpath 'com.vandalsoftware.tools.gradle:robolectric:0.1.0'
