@@ -1,0 +1,5 @@
+ext.repositoryUsername = has('bintrayUsername') ? bintrayUsername : null
+ext.repositoryPassword = has('bintrayPassword') ? bintrayPassword : null
+ext.repositoryUrl = has('bintrayUrl') ? "$bintrayUrl/robolectric-gradle;publish=1" : null
+
+apply from: 'publish.gradle'

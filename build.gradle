@@ -4,39 +4,43 @@ task wrapper(type: Wrapper) {
 
 buildscript {
     repositories {
-        mavenCentral()
+        jcenter()
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:0.14.0'
     }
 }
 
+ext.release = has("release")
+
 apply plugin: 'groovy'
-apply plugin: 'maven'
+
+if (project.ext.release) {
+    apply from: 'bintray.gradle'
+} else {
+    apply from: 'sonatype.gradle'
+}
 
 group = 'com.vandalsoftware.tools.gradle'
-
-def baseVersion = '0.1.0'
-if (has('release')) {
-    version = baseVersion
-} else {
-    version = "$baseVersion-SNAPSHOT"
-}
+version = getVersion('0.1.0')
 
 jar {
     baseName 'robolectric'
 }
 
-artifacts {
-    archives jar
-}
-
 repositories {
-    mavenCentral()
+    jcenter()
 }
 
 dependencies {
     compile gradleApi()
     compile localGroovy()
     compile 'com.android.tools.build:gradle:0.14.0'
+}
+
+def getVersion(def baseVersion) {
+    if (project.ext.release) {
+        return baseVersion
+    }
+    return "$baseVersion-SNAPSHOT"
 }
