@@ -12,7 +12,7 @@ import org.gradle.api.tasks.testing.Test
 
 class RobolectricPlugin implements Plugin<Project> {
     public static final String COMPILE_TASK_NAME = 'compile'
-    public static final String TEST_TASK_NAME = 'test'
+    public static final String TEST_TASK_NAME = 'robolectricTest'
     public static final String TASK_NAME_PREFIX = 'robolectric'
 
     public static final String TEST_COMPILE_CONFIGURATION_NAME = 'testCompile'
