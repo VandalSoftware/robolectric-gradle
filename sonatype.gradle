@@ -1,12 +1,6 @@
-def sonatypeRepo = has("sonatypeRepo") ? sonatypeRepo : null
 def sonatypeSnapshotRepo = has("sonatypeSnapshotRepo") ? sonatypeSnapshotRepo : null
 ext.repositoryUsername = has("sonatypeUsername") ? sonatypeUsername : null
 ext.repositoryPassword = has("sonatypePassword") ? sonatypePassword : null
-
-if (has("release")) {
-    ext.repositoryUrl = sonatypeRepo
-} else {
-    ext.repositoryUrl = sonatypeSnapshotRepo
-}
+ext.repositoryUrl = sonatypeSnapshotRepo
 
 apply from: 'publish.gradle'
