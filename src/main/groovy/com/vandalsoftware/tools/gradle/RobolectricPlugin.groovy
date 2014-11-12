@@ -117,10 +117,12 @@ class RobolectricPlugin implements Plugin<Project> {
 
             def procResTask = project.tasks.create("${TASK_NAME_PREFIX}Process${testVariant}TestResources",
                     Copy)
-            procResTask.from('src') {
-                include 'test/resources/**/*'
-                flavors.each { flavor ->
-                    include "test${flavor}/resources/**/*"
+            procResTask.from('src/test/resources') {
+                include '**/*'
+            }
+            flavors.each { flavor ->
+                procResTask.from("test${flavor}/resources") {
+                    include '**/*'
                 }
             }
             procResTask.destinationDir =
@@ -140,9 +142,10 @@ class RobolectricPlugin implements Plugin<Project> {
 
             testTask.testClassesDir = testDestinationDir
             testTask.inputs.sourceFiles.from.clear()
-            testTask.classpath = testClasspath.plus(project.files(testDestinationDir))
+            testTask.classpath = testClasspath.plus(project.files(testDestinationDir, procResTask.destinationDir))
             testTask.doFirst {
                 testTask.classpath = testClasspath.plus(project.files(testDestinationDir,
+                        procResTask.destinationDir,
                         plugin.bootClasspath.join(File.pathSeparator)))
             }
             // Set the applicationId as the packageName to avoid unknown resource errors when
