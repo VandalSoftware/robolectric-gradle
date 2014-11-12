@@ -9,6 +9,8 @@ import org.gradle.api.file.FileTree
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.tasks.testing.Test
+import org.gradle.testing.jacoco.plugins.JacocoPlugin
+import org.gradle.testing.jacoco.tasks.JacocoReport
 
 class RobolectricPlugin implements Plugin<Project> {
     public static final String COMPILE_TASK_NAME = 'compile'
@@ -37,6 +39,8 @@ class RobolectricPlugin implements Plugin<Project> {
             throw new UnsupportedOperationException("This project must apply" +
                     " com.android.application or com.android.library")
         }
+
+        def extension = project.extensions.create('robolectric', RobolectricExtension)
 
         def compileConfig = project.configurations.getByName(COMPILE_TASK_NAME)
         Configuration testConfig = project.configurations.create(TEST_COMPILE_CONFIGURATION_NAME) {
@@ -160,7 +164,43 @@ class RobolectricPlugin implements Plugin<Project> {
             // Work around http://issues.gradle.org/browse/GRADLE-1682
             testTask.scanForTestClasses = false
 
-            testAll.dependsOn testTask
+            if (extension.testCoverageEnabled) {
+                if (!project.plugins.hasPlugin(JacocoPlugin)) {
+                    project.apply plugin: JacocoPlugin
+                }
+                testTask.jacoco {
+                    destinationFile =
+                            project.file("${project.buildDir}/jacoco/${testVariantOutputDirName}/${testTask.name}.exec")
+                }
+                def jacocoTask = project.tasks.create("$TASK_NAME_PREFIX${testVariant}JacocoTestReport", JacocoReport)
+                jacocoTask.classDirectories = project.fileTree(
+                        dir: "${project.buildDir}/intermediates/classes/${testVariantOutputDirName}",
+                        excludes: ['**/R.class',
+                                   '**/R$*.class',
+                                   '**/BuildConfig.*',
+                                   '**/Manifest*.*']
+                )
+
+                def sourceDirs = [project.android.sourceSets.main.java.srcDirs]
+                variant.productFlavors.each { flavor ->
+                    sourceDirs.add(project.android.sourceSets[flavor.name].java.srcDirs)
+                }
+                jacocoTask.sourceDirectories = project.files(sourceDirs)
+                jacocoTask.executionData =
+                        project.files("${project.buildDir}/jacoco/${testVariantOutputDirName}/${testTask.name}.exec")
+                jacocoTask.reports {
+                    xml.enabled true
+                    html {
+                        enabled true
+                        destination "${project.buildDir}/jacoco/${testVariantOutputDirName}/html"
+                    }
+                    csv.enabled false
+                }
+                jacocoTask.dependsOn testTask
+                testAll.dependsOn jacocoTask
+            } else {
+                testAll.dependsOn testTask
+            }
         }
         def checkTask = project.tasks.findByName(CHECK_TASK_NAME)
         if (checkTask) {
