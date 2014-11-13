@@ -177,7 +177,7 @@ class RobolectricPlugin implements Plugin<Project> {
                 }
                 def jacocoTask = project.tasks.create("$TASK_NAME_PREFIX${testVariant}JacocoTestReport", JacocoReport)
                 jacocoTask.classDirectories = project.fileTree(
-                        dir: "${project.buildDir}/intermediates/classes/${testVariantOutputDirName}",
+                        dir: variantJavaCompile.destinationDir,
                         excludes: ['**/R.class',
                                    '**/R$*.class',
                                    '**/BuildConfig.*',
