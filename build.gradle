@@ -22,7 +22,7 @@ if (project.ext.release) {
 }
 
 group = 'com.vandalsoftware.tools.gradle'
-version = getVersion('0.2.0')
+version = getVersion('0.2.1')
 
 jar {
     baseName 'robolectric'
