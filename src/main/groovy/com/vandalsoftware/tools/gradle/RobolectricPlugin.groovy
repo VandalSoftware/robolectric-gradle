@@ -40,13 +40,13 @@ class RobolectricPlugin implements Plugin<Project> {
                     " com.android.application or com.android.library")
         }
 
-        def extension = project.extensions.create('robolectric', RobolectricExtension)
+        def extension = project.extensions.create('robolectric', RobolectricExtension, project)
+        TestConfig debugTestConfig = extension.buildTypes.create('debug')
 
         def compileConfig = project.configurations.getByName(COMPILE_TASK_NAME)
         Configuration testConfig = project.configurations.create(TEST_COMPILE_CONFIGURATION_NAME) {
             extendsFrom compileConfig
         }
-
         project.afterEvaluate {
             def deps = [] as HashSet
             testConfig.dependencies.each { dep ->
@@ -136,6 +136,11 @@ class RobolectricPlugin implements Plugin<Project> {
 
             def testResultsOutput =
                     project.file("${project.testResultsDir}/$testVariantOutputDirName/binary/${testTask.name}")
+            addConfigToTestTask(extension.defaultConfig, testTask)
+            addConfigToTestTask(debugTestConfig, testTask)
+            variant.productFlavors.each {
+                addConfigToTestTask(extension.productFlavors[it.name], testTask)
+            }
             testTask.reports.html.destination = project.reporting.file(testVariantOutputDirName)
             testTask.reports.junitXml.destination = testResultsOutput
             testTask.binResultsDir = testResultsOutput
@@ -208,6 +213,17 @@ class RobolectricPlugin implements Plugin<Project> {
         def checkTask = project.tasks.findByName(CHECK_TASK_NAME)
         if (checkTask) {
             checkTask.dependsOn testAll
+        }
+    }
+
+    static def addConfigToTestTask(TestConfig testConfig, Test testTask) {
+        if (testConfig) {
+            if (!testConfig.includes.isEmpty()) {
+                testTask.include(testConfig.includes)
+            }
+            if (!testConfig.excludes.isEmpty()) {
+                testTask.exclude(testConfig.excludes)
+            }
         }
     }
 }
