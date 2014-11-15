@@ -67,7 +67,29 @@ testPaidCompile 'junit:junit:3.8'
 
 ### Test task configuration
 
-Tasks prefixed with `robolectricTest*` are [Test](http://www.gradle.org/docs/current/dsl/org.gradle.api.tasks.testing.Test.html) tasks and can be configured as such:
+The `RobolectricExtension` allows you to configure default includes and excludes; and includes and excludes by build type and product flavor:
+
+```
+robolectric {
+    include '**/Foo*.class'
+    
+    buildTypes {
+        debug {
+            include '**/Bar*.class'
+        }
+    }
+    
+    productFlavors {
+        free {
+            exclude '**/PaidTest*.class'
+        }
+    }
+}
+```
+
+This configures `robolectricTestFreeDebug` task to include `[**/Foo*.class, **/Bar*.class]` and exclude `[**/PaidTest*.class]`
+
+Alternatively, you may want to configure the Test task directly. Tasks prefixed with `robolectricTest*` are [Test](http://www.gradle.org/docs/current/dsl/org.gradle.api.tasks.testing.Test.html) tasks and can be configured as such:
 
 ```
 project.afterEvaluate {
