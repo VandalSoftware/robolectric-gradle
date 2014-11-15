@@ -24,7 +24,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.vandalsoftware.tools.gradle:robolectric:0.1.0'
+        classpath 'com.vandalsoftware.tools.gradle:robolectric:0.3.0'
     }
 }
 
