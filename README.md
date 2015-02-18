@@ -29,6 +29,10 @@ buildscript {
 }
 
 apply plugin: 'robolectric'
+
+dependencies {
+    testCompile 'org.robolectric:robolectric:2.4'
+}
 ```
 
 Tests are placed in the same directory as you would normally place them if you were applying the `java` plugin.
