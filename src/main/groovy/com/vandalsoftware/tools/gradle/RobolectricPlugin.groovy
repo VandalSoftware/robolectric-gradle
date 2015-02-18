@@ -55,7 +55,10 @@ class RobolectricPlugin implements Plugin<Project> {
                 description: 'Runs all Robolectric tests')
 
         variants.all { variant ->
-            if ('release'.equals(variant.buildType.name)) {
+            def testTypes = extension.buildTypes.matching() {
+                it.name.equals(variant.buildType.name)
+            }
+            if (testTypes.isEmpty()) {
                 return
             }
             def flavors = variant.productFlavors.collect { flavor ->
