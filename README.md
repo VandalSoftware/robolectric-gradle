@@ -7,11 +7,11 @@ This project was adapted from [Pivotal Labs' project](https://github.com/robolec
 
 - Robolectric tests live separately from `androidTest`, which means they can run independently from tests created for the Android testing framework
 
-For example, you can run the `test` task by itself or alongside `connectedCheck`:
+For example, you can run the `robolectricTest` task by itself or alongside `connectedCheck`:
 
 ```
-$ ./gradlew test
-$ ./gradlew test connectedCheck
+$ ./gradlew robolectricTest
+$ ./gradlew robolectricTest connectedCheck
 ```
 
 ## Setup
