@@ -19,7 +19,7 @@ class RobolectricPlugin implements Plugin<Project> {
 
     public static final String TEST_COMPILE_CONFIGURATION_NAME = 'testCompile'
 
-    public static final String VERIFICATION_GROUP_NAME = 'Verification'
+    public static final String ROBOLECTRIC_GROUP_NAME = 'Robolectric'
     public static final String CHECK_TASK_NAME = 'check'
 
     @Override
@@ -51,7 +51,7 @@ class RobolectricPlugin implements Plugin<Project> {
             })
         }
 
-        def testAll = project.tasks.create(name: TEST_TASK_NAME, group: VERIFICATION_GROUP_NAME,
+        def testAll = project.tasks.create(name: TEST_TASK_NAME, group: ROBOLECTRIC_GROUP_NAME,
                 description: 'Runs all Robolectric tests')
 
         variants.all { variant ->
@@ -114,7 +114,10 @@ class RobolectricPlugin implements Plugin<Project> {
             def classesTask = project.tasks.create("${TASK_NAME_PREFIX}${testVariant}TestClasses")
             classesTask.dependsOn procResTask, compileTask
 
-            def testTask = project.tasks.create("${TASK_NAME_PREFIX}Test${testVariant}", Test)
+            def testTask = project.tasks.create("${TASK_NAME_PREFIX}Test${testVariant}", Test) {
+                description = "Runs Robolectric tests on $testVariant variant"
+                group = ROBOLECTRIC_GROUP_NAME
+            }
             testTask.dependsOn classesTask
 
             def testResultsOutput =
