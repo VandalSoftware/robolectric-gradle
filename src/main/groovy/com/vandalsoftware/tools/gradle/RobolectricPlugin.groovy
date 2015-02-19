@@ -122,7 +122,9 @@ class RobolectricPlugin implements Plugin<Project> {
             addConfigToTestTask(extension.defaultConfig, testTask)
             addConfigToTestTask(debugTestConfig, testTask)
             variant.productFlavors.each {
-                addConfigToTestTask(extension.productFlavors[it.name], testTask)
+                if (extension.hasProperty(it.name)) {
+                    addConfigToTestTask(extension.productFlavors[it.name], testTask)
+                }
             }
             testTask.reports.html.destination = project.reporting.file(testVariantOutputDirName)
             testTask.reports.junitXml.destination = testResultsOutput
