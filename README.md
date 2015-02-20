@@ -54,12 +54,13 @@ dependencies {
 }
 ```
 
-By default, the plugin adds Robolectric and JUnit JARs. Use the `testCompile` configuration to select specific versions:
+Use the `testCompile` configuration to add dependencies:
 
 ```
 dependencies {
   testCompile 'junit:junit:4.11'
-  testCompile 'org.robolectric:robolectric:2.+'
+  testCompile 'org.mockito:mockito-core:1.10.19'
+  testCompile 'org.robolectric:robolectric:2.4'
 }
 ```
 
