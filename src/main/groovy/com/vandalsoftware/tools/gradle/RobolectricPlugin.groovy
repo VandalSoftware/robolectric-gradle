@@ -41,8 +41,12 @@ class RobolectricPlugin implements Plugin<Project> {
         TestConfig debugTestConfig = extension.buildTypes.create('debug')
 
         def compileConfig = project.configurations.getByName(COMPILE_TASK_NAME)
-        Configuration testConfig = project.configurations.create(TEST_COMPILE_CONFIGURATION_NAME) {
-            extendsFrom compileConfig
+
+        Configuration testConfig = project.configurations.findByName(TEST_COMPILE_CONFIGURATION_NAME)
+        if (testConfig == null) {
+            testConfig = project.configurations.create(TEST_COMPILE_CONFIGURATION_NAME) {
+                extendsFrom compileConfig
+            }
         }
 
         project.android.productFlavors.all {
