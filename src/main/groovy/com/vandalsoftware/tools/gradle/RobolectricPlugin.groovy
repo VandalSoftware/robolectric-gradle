@@ -13,13 +13,14 @@ import org.gradle.testing.jacoco.plugins.JacocoPlugin
 import org.gradle.testing.jacoco.tasks.JacocoReport
 
 class RobolectricPlugin implements Plugin<Project> {
-    public static final String COMPILE_TASK_NAME = 'compile'
     public static final String TEST_TASK_NAME = 'robolectricTest'
+    public static final String REPORT_TASK_NAME = 'robolectricJacocoReport'
     public static final String TASK_NAME_PREFIX = 'robolectric'
+    public static final String EXTENSION_NAME = 'robolectric'
+    public static final String TASK_GROUP_NAME = 'Robolectric'
 
     public static final String TEST_COMPILE_CONFIGURATION_NAME = 'testCompile'
-
-    public static final String ROBOLECTRIC_GROUP_NAME = 'Robolectric'
+    public static final String COMPILE_TASK_NAME = 'compile'
     public static final String CHECK_TASK_NAME = 'check'
 
     @Override
@@ -37,7 +38,7 @@ class RobolectricPlugin implements Plugin<Project> {
                     " com.android.application or com.android.library")
         }
 
-        def extension = project.extensions.create('robolectric', RobolectricExtension, project)
+        def extension = project.extensions.create(EXTENSION_NAME, RobolectricExtension, project)
         TestConfig debugTestConfig = extension.buildTypes.create('debug')
 
         def compileConfig = project.configurations.getByName(COMPILE_TASK_NAME)
@@ -55,8 +56,10 @@ class RobolectricPlugin implements Plugin<Project> {
             })
         }
 
-        def testAll = project.tasks.create(name: TEST_TASK_NAME, group: ROBOLECTRIC_GROUP_NAME,
-                description: 'Runs all Robolectric tests')
+        def testAll = project.tasks.create(name: TEST_TASK_NAME, group: TASK_GROUP_NAME,
+                description: "Runs all $TASK_GROUP_NAME tests")
+        def reportAll = project.tasks.create(name: REPORT_TASK_NAME, group: TASK_GROUP_NAME,
+                description: "Generate Jacoco coverage reports after running $TASK_GROUP_NAME tests")
 
         variants.all { variant ->
             def testTypes = extension.buildTypes.matching() {
@@ -118,10 +121,9 @@ class RobolectricPlugin implements Plugin<Project> {
             def classesTask = project.tasks.create("${TASK_NAME_PREFIX}${testVariant}TestClasses")
             classesTask.dependsOn procResTask, compileTask
 
-            def testTask = project.tasks.create("${TASK_NAME_PREFIX}Test${testVariant}", Test) {
-                description = "Runs Robolectric tests on $testVariant variant"
-                group = ROBOLECTRIC_GROUP_NAME
-            }
+            def testTask = project.tasks.create("${TASK_NAME_PREFIX}Test${testVariant}", Test)
+            testTask.description = "Runs $TASK_GROUP_NAME tests on $testVariant variant"
+            testTask.group = TASK_GROUP_NAME
             testTask.dependsOn classesTask
 
             def testResultsOutput =
@@ -165,49 +167,57 @@ class RobolectricPlugin implements Plugin<Project> {
             // Work around http://issues.gradle.org/browse/GRADLE-1682
             testTask.scanForTestClasses = false
 
+            testAll.dependsOn testTask
+
             if (extension.testCoverageEnabled) {
                 if (!project.plugins.hasPlugin(JacocoPlugin)) {
                     project.apply plugin: JacocoPlugin
                 }
-                def coverageFilePath = "${project.buildDir}/jacoco/${testVariantOutputDirName}/coverage.exec"
+                def jacocoOutput = "${project.buildDir}/jacoco/${testVariantOutputDirName}"
+                def coverageFilePath = "$jacocoOutput/coverage.exec"
                 testTask.jacoco {
-                    destinationFile =
-                            project.file(coverageFilePath)
+                    destinationFile = project.file(coverageFilePath)
                 }
-                def jacocoTask = project.tasks.create("$TASK_NAME_PREFIX${testVariant}JacocoTestReport", JacocoReport)
-                jacocoTask.classDirectories = project.fileTree(
-                        dir: variantJavaCompile.destinationDir,
-                        excludes: ['**/R.class',
-                                   '**/R$*.class',
-                                   '**/BuildConfig.*',
-                                   '**/Manifest*.*']
-                )
-
-                def sourceDirs = [project.android.sourceSets.main.java.srcDirs]
-                variant.productFlavors.each { flavor ->
-                    sourceDirs.add(project.android.sourceSets[flavor.name].java.srcDirs)
-                }
-                jacocoTask.sourceDirectories = project.files(sourceDirs)
-                jacocoTask.executionData =
-                        project.files(coverageFilePath)
-                jacocoTask.reports {
-                    xml.enabled true
-                    html {
-                        enabled true
-                        destination "${project.buildDir}/jacoco/${testVariantOutputDirName}/html"
-                    }
-                    csv.enabled false
-                }
-                jacocoTask.dependsOn testTask
-                testAll.dependsOn jacocoTask
-            } else {
-                testAll.dependsOn testTask
+                def reportTask = createJacocoReportTask(project, coverageFilePath, jacocoOutput, testVariant,
+                        variantJavaCompile, variant)
+                reportTask.dependsOn testTask
+                reportAll.dependsOn reportTask
             }
         }
         def checkTask = project.tasks.findByName(CHECK_TASK_NAME)
         if (checkTask) {
             checkTask.dependsOn testAll
         }
+    }
+
+    private JacocoReport createJacocoReportTask(Project project, def coverageFilePath, def jacocoOutput,
+            def testVariant, def variantJavaCompile, def variant) {
+        def jacocoTask = project.tasks.create("$TASK_NAME_PREFIX${testVariant}JacocoReport", JacocoReport)
+        jacocoTask.classDirectories = project.fileTree(
+                dir: variantJavaCompile.destinationDir,
+                excludes: ['**/R.class',
+                           '**/R$*.class',
+                           '**/BuildConfig.*',
+                           '**/Manifest*.*']
+        )
+        jacocoTask.description = "Generate Jacoco coverage reports after running $testVariant tests"
+        jacocoTask.group = TASK_GROUP_NAME
+
+        def sourceDirs = [project.android.sourceSets.main.java.srcDirs]
+        variant.productFlavors.each { flavor ->
+            sourceDirs.add(project.android.sourceSets[flavor.name].java.srcDirs)
+        }
+        jacocoTask.sourceDirectories = project.files(sourceDirs)
+        jacocoTask.executionData = project.files(coverageFilePath)
+        jacocoTask.reports {
+            xml.enabled true
+            html {
+                enabled true
+                destination "$jacocoOutput/html"
+            }
+            csv.enabled false
+        }
+        return jacocoTask
     }
 
     static def addConfigToTestTask(TestConfig testConfig, Test testTask) {
