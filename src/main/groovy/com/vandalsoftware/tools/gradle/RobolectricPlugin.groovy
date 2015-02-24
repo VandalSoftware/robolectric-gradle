@@ -169,9 +169,10 @@ class RobolectricPlugin implements Plugin<Project> {
                 if (!project.plugins.hasPlugin(JacocoPlugin)) {
                     project.apply plugin: JacocoPlugin
                 }
+                def coverageFilePath = "${project.buildDir}/jacoco/${testVariantOutputDirName}/coverage.exec"
                 testTask.jacoco {
                     destinationFile =
-                            project.file("${project.buildDir}/jacoco/${testVariantOutputDirName}/coverage.exec")
+                            project.file(coverageFilePath)
                 }
                 def jacocoTask = project.tasks.create("$TASK_NAME_PREFIX${testVariant}JacocoTestReport", JacocoReport)
                 jacocoTask.classDirectories = project.fileTree(
@@ -188,7 +189,7 @@ class RobolectricPlugin implements Plugin<Project> {
                 }
                 jacocoTask.sourceDirectories = project.files(sourceDirs)
                 jacocoTask.executionData =
-                        project.files("${project.buildDir}/jacoco/${testVariantOutputDirName}/coverage.exec")
+                        project.files(coverageFilePath)
                 jacocoTask.reports {
                     xml.enabled true
                     html {
